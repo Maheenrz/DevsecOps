@@ -81,31 +81,30 @@ University of the Punjab, Lahore, Pakistan.}%
 
 % ============================================================
 \begin{abstract}
-Modern software delivery pipelines have emerged as high-value targets
-for adversarial exploitation, as evidenced by catastrophic supply-chain
-incidents including the SolarWinds Orion compromise and the 2024 XZ
-Utils backdoor. DevSecOps---the integration of security controls
+Modern software delivery pipelines are now prime targets for adversarial
+exploitation, as evidenced by the SolarWinds Orion compromise and the
+2024 XZ Utils backdoor. DevSecOps---the integration of security controls
 directly into Continuous Integration and Continuous Delivery (CI/CD)
-workflows---has become the dominant paradigm for mitigating these
-threats. Yet a persistent implementation gap divides organisational
-adopters: large enterprises wrestle to reconcile stringent compliance
-mandates with deployment velocity, while Small and Medium-sized
-Enterprises (SMEs) face qualitatively distinct barriers rooted in
-expertise scarcity and resource constraints. This paper presents the
-\emph{Unified DevSecOps Framework} (UDF), a five-layer, scale-adaptive
-architecture that bridges this divide through \emph{Security Operating
-Profiles} (SOPs) calibrated to organisational maturity. The UDF
-synthesises automated static analysis (SAST), dynamic analysis
-(DAST), and software composition analysis (SCA) with policy-as-code
-enforcement aligned to NIST~SP~800-204D supply-chain integrity
-controls~\cite{nist2024}. An AI/ML integration layer addresses alert
-fatigue and the remediation bottleneck through LLM-assisted fix
+workflows---has become the standard response to these threats. Yet a
+persistent implementation gap divides adopters: large enterprises wrestle
+to reconcile compliance mandates with deployment velocity, while Small and
+Medium-sized Enterprises (SMEs) face distinct barriers rooted in expertise
+scarcity and resource constraints.
+
+This paper presents the \emph{Unified DevSecOps Framework} (UDF), a
+five-layer, scale-adaptive architecture that bridges this divide through
+\emph{Security Operating Profiles} (SOPs) calibrated to organisational
+maturity. The UDF combines automated static analysis (SAST), dynamic
+analysis (DAST), and software composition analysis (SCA) with
+policy-as-code enforcement aligned to NIST~SP~800-204D supply-chain
+integrity controls~\cite{nist2024}. An AI/ML integration layer targets
+alert fatigue and the remediation bottleneck through LLM-assisted fix
 generation and ML-driven triage. A Fintech case study demonstrates
-deployment using Snyk, Trivy, and Open Policy Agent. Empirical
-evaluation shows the UDF raises pre-production vulnerability detection
-from a 24\% baseline to 96\% in the enterprise profile and reduces
-Mean Time to Remediation (MTTR) by up to 90.6\%, while achieving
-87\% mapped coverage of applicable NIST SP~800-204D controls.
+deployment using Snyk, Trivy, and Open Policy Agent. Pre-production
+vulnerability detection rises from a 24\% baseline to 96\% under the
+enterprise profile; Mean Time to Remediation (MTTR) falls by up to
+90.6\%, and the framework achieves 87\% mapped coverage of applicable
+NIST SP~800-204D controls.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -118,40 +117,37 @@ SME, Fintech
 \section{Introduction}
 % ============================================================
 
-The proliferation of automated CI/CD pipelines has fundamentally
-altered the software delivery landscape. Code that previously
-progressed through weeks of manual review now traverses from developer
-commit to production deployment in minutes, orchestrated by pipelines
-that hold privileged access to source repositories, build environments,
-artifact registries, and cloud infrastructure. Compromising a single
-node in this chain yields an attacker persistent, trusted access to
-every downstream consumer of the pipeline's outputs~\cite{nist2024}.
+Automated CI/CD pipelines have changed how software ships. Code that once
+spent weeks in manual review now moves from developer commit to production
+in minutes, driven by pipelines that hold privileged access to source
+repositories, build environments, artifact registries, and cloud
+infrastructure. Compromising one node in that chain gives an attacker
+persistent, trusted access to every downstream consumer of the pipeline's
+outputs~\cite{nist2024}.
 
-The severity of this threat has been demonstrated repeatedly at scale.
-The 2020 SolarWinds Orion compromise injected malicious code into a
-legitimate build process, distributing a Trojanised update to
-approximately 18,000 organisations globally, including multiple
-U.S.\ federal agencies~\cite{solanke2022}.
-The 2024 XZ Utils backdoor, embedded through a multi-year social
-engineering campaign against a single open-source maintainer,
-demonstrated that supply-chain threats are not exclusive to
-nation-state actors but permeate the entire software ecosystem.
+The threat is not theoretical. The 2020 SolarWinds Orion compromise
+injected malicious code into a legitimate build process and distributed a
+Trojanised update to approximately 18,000 organisations globally, including
+multiple U.S.\ federal agencies~\cite{solanke2022}. The 2024 XZ Utils
+backdoor, planted through a multi-year social engineering campaign against
+a single open-source maintainer, showed that supply-chain attacks are not
+the exclusive domain of nation-states---they reach into every corner of the
+software ecosystem.
 
-DevSecOps responds by \emph{shifting security left}: embedding
-automated validation, dependency governance, and compliance checking
-directly into CI/CD workflows rather than treating security as a
-post-development gate~\cite{singh2020}.
+DevSecOps responds by \emph{shifting security left}: automated validation,
+dependency governance, and compliance checking are embedded directly into
+CI/CD workflows rather than applied as a post-development
+gate~\cite{singh2020}.
 
-Yet a persistent implementation gap divides organisational adopters.
-Enterprise organisations possess the resources to deploy comprehensive
-toolchains but struggle to reconcile regulatory compliance mandates
-with high-frequency deployment targets~\cite{solanke2022}. SMEs face
-qualitatively distinct obstacles: absent security ownership roles,
-uncalibrated scanning tools generating high false-positive noise, and
-the absence of institutional knowledge to act on findings~\cite{cheenepalli2025}.
+A persistent implementation gap, however, divides adopters. Enterprise
+organisations have the resources to run comprehensive toolchains but
+struggle to keep compliance mandates compatible with high-frequency
+deployment targets~\cite{solanke2022}. SMEs face a different set of
+problems: no dedicated security ownership, scanning tools miscalibrated
+to their codebase generating high false-positive noise, and no
+institutional knowledge for acting on findings~\cite{cheenepalli2025}.
 
-This paper addresses this bifurcation through the following
-contributions:
+This paper addresses the bifurcation through the following contributions:
 \begin{itemize}
   \item A \textbf{Unified DevSecOps Framework (UDF)} comprising five
     architectural layers---Source Integrity, Build-Time Analysis,
@@ -159,13 +155,13 @@ contributions:
     Governance/Policy-as-Code---with progressive elaboration across
     organisational scales.
   \item \textbf{Security Operating Profiles (SOPs)} providing
-    scale-calibrated defaults usable by a five-person startup and a
+    scale-calibrated defaults applicable to a five-person startup and a
     regulated financial institution without re-architecture.
   \item A \textbf{comparative analysis} of 12 SAST, DAST, SCA, and
     IaC scanning tools with actionable selection guidance per SOP.
-  \item An \textbf{AI/ML integration architecture} addressing alert
+  \item An \textbf{AI/ML integration architecture} targeting alert
     fatigue and the remediation bottleneck through ML-based triage and
-    LLM-assisted fix-generation within a human-in-the-loop paradigm.
+    LLM-assisted fix generation within a human-in-the-loop paradigm.
   \item A \textbf{Fintech case study} demonstrating end-to-end UDF
     deployment for a payment-processing platform under PCI-DSS
     constraints using Snyk, Trivy, and OPA.
@@ -185,128 +181,124 @@ evaluates the framework. Section~IX concludes.
 
 \subsection{Toolchain Integration Research}
 
-Singh~\cite{singh2020} provides a widely-cited taxonomy demonstrating
-that multi-stage security scanning detects up to 73\% of OWASP Top~10
-vulnerabilities before production deployment. The work surveys
+Singh~\cite{singh2020} provides a widely-cited taxonomy showing that
+multi-stage security scanning catches up to 73\% of OWASP Top~10
+vulnerabilities before production deployment. The survey covers
 open-source and commercial SAST, DAST, SCA, and IaC tools and proposes
-an implementation strategy that positions them as automated pipeline
-stages embodying the Shift-Left principle. Critically, the work is
-technically rigorous but implicitly assumes practitioners possess the
-expertise to configure, tune, and interpret tool outputs---a
-precondition that fails in the SME context~\cite{cheenepalli2025}.
+an implementation strategy that treats each as an automated pipeline
+stage---the operational expression of Shift-Left. The work is technically
+rigorous, but it assumes practitioners can configure, tune, and interpret
+tool outputs. That assumption does not hold for most
+SMEs~\cite{cheenepalli2025}.
 
-Thota~\cite{thota2024} constructs an experimental Kubernetes-based
-CI/CD pipeline to empirically evaluate security tool performance,
-measuring vulnerability detection accuracy, pipeline execution
-overhead, and false positive/negative rates. The study concludes that
-the limiting factor in pipeline security adoption is not tool
-availability but human capacity to operate those tools. Thota
-documents SAST false-positive rates averaging 35--40\% without expert
-calibration in enterprise environments, creating the normalisation
-dynamic where genuine vulnerabilities are dismissed alongside
-noise---directly motivating the ML-based alert triage in Section~VI.
+Thota~\cite{thota2024} constructed an experimental Kubernetes-based
+CI/CD pipeline to measure security tool performance directly, recording
+vulnerability detection accuracy, pipeline overhead, and false
+positive/negative rates. The central finding: the bottleneck in pipeline
+security adoption is not tool availability but the human capacity to
+operate those tools. SAST false-positive rates averaged 35--40\% without
+expert calibration in enterprise environments---numbers that produce the
+normalisation dynamic where genuine vulnerabilities get dismissed
+alongside noise, and which motivate the ML-based alert triage in
+Section~VI.
 
-Jammeh~\cite{jammeh2020} addresses the human precondition through a
-feasibility study targeting teams without dedicated security expertise,
-identifying five automation decision factors: code complexity, risk
-tolerance, regulatory context, toolchain maturity, and team security
-literacy. The critical finding is that automation transforms rather
-than eliminates expertise requirements.
+Jammeh~\cite{jammeh2020} takes the expertise problem as the starting
+point, running a feasibility study for teams without dedicated security
+staff and identifying five automation decision factors: code complexity,
+risk tolerance, regulatory context, toolchain maturity, and team security
+literacy. The key conclusion is that automation changes what expertise
+is required---it does not remove the requirement.
 
 \subsection{Organisational Adoption Barriers}
 
-Cheenepalli et~al.~\cite{cheenepalli2025} deliver the most
-methodologically rigorous SME-focused analysis, surveying 405
-engineering professionals through the Technology Acceptance Model
-(TAM) and Diffusion of Innovations (DOI) lenses. Three primary
-barriers are identified. \textit{First}, the absence of dedicated
-security personnel forces security work into collateral-duty status,
-chronically deprioritised against feature delivery. \textit{Second},
-uncalibrated scanning tools generating high false-positive volumes
-erode developer trust. \textit{Third}, ambiguous ownership boundaries
-between development and operations mean findings that span team
-boundaries fall through accountability gaps. Critically,
-Cheenepalli et~al.\ diagnose these barriers without prescribing
-architectural remediation---a gap the UDF directly targets.
+Cheenepalli et~al.~\cite{cheenepalli2025} offer the most methodologically
+grounded SME-focused analysis, drawing on 405 engineering professionals
+through the Technology Acceptance Model (TAM) and Diffusion of Innovations
+(DOI) lenses. Three barriers stand out. Security work falls to developers
+as a collateral duty, chronically deprioritised against feature delivery.
+Scanning tools miscalibrated to the codebase erode developer trust with
+high false-positive volumes. And findings that span development and
+operations fall through accountability gaps when ownership is ambiguous.
+Cheenepalli et~al.\ diagnose these barriers precisely but stop short of
+prescribing architectural remediation---the gap the UDF is designed to
+fill.
 
 \subsection{Regulated Industries and Compliance-as-Code}
 
-Solanke~\cite{solanke2022} examines CI/CD security in financial
-services and healthcare, where PCI-DSS, HIPAA, and SOC~2 mandates
-impose hard requirements on audit trails, change management, and data
-lineage. A key finding is that regulated organisations frequently
-operate \emph{bifurcated pipelines}: a high-velocity path for routine
-changes and a compliance-gated slow path for regulated changes.
-The UDF's SOP-3 profile directly eliminates this anti-pattern by
-embedding compliance gates into the primary pipeline.
+Solanke~\cite{solanke2022} examines CI/CD security in financial services
+and healthcare, where PCI-DSS, HIPAA, and SOC~2 mandates impose hard
+requirements on audit trails, change management, and data lineage. A
+recurring finding: regulated organisations end up with \emph{bifurcated
+pipelines}---a high-velocity path for routine changes and a separate
+compliance-gated slow path for regulated ones. The UDF's SOP-3 profile
+eliminates this anti-pattern by embedding compliance gates into the
+primary pipeline.
 
-Allam~\cite{allam2022} provides the KPI validation layer: the
-FinServeTech case study documents MTTD reduction from 21~days to
-4~hours and MTTR from 14~days to 6~hours following DevSecOps adoption.
+Allam~\cite{allam2022} provides the KPI validation: the FinServeTech
+case study records MTTD falling from 21~days to 4~hours and MTTR from
+14~days to 6~hours after DevSecOps adoption.
 
-NIST SP~800-204D~\cite{nist2024} constitutes the most authoritative
-normative framework for CI/CD supply-chain security. The standard is
-intentionally normative rather than prescriptive---defining
-\emph{what} must be achieved without specifying \emph{how}.
-The UDF provides the implementation bridge.
+NIST SP~800-204D~\cite{nist2024} is the most authoritative normative
+framework for CI/CD supply-chain security. It defines \emph{what} must
+be achieved without specifying \emph{how}. The UDF provides the
+implementation bridge.
 
 \subsection{Research Gap}
 
-The literature reveals a consistent three-way fragmentation: toolchain
-research addresses \emph{what} to deploy; adoption research diagnoses
-\emph{why} it fails; standards provide \emph{what outcomes} are
-required. No single framework spans all three axes while simultaneously
-accommodating SME resource constraints~\cite{cheenepalli2025},
-enterprise compliance depth~\cite{nist2024}, and the emerging AI/ML
-operational frontier~\cite{thota2024}. The UDF is designed to close
-this gap.
+The literature splits cleanly across three axes: toolchain research
+identifies \emph{what} to deploy; adoption research explains \emph{why
+it fails}; standards specify \emph{what outcomes are required}. No
+published framework spans all three simultaneously while accommodating
+SME resource constraints~\cite{cheenepalli2025}, enterprise compliance
+depth~\cite{nist2024}, and the AI/ML operational layer that is now
+entering production environments~\cite{thota2024}. The UDF targets
+this gap directly.
 
 % ============================================================
 \section{Threat Model}
 % ============================================================
 
-We adopt the STRIDE taxonomy adapted for CI/CD pipeline contexts,
-identifying six principal threat categories against which UDF controls
-are justified.
+We apply the STRIDE taxonomy to CI/CD pipeline contexts, identifying six
+threat categories against which UDF controls are justified.
 
 \textbf{T1~-- Supply Chain Injection:} An adversary compromises an
-upstream dependency or build tool, propagating malicious code through
-the pipeline. Research indicates 78\% of vulnerability exposure in
-modern applications resides in transitive, not direct,
-dependencies~\cite{singh2020}. Mitigated by SCA with provenance
+upstream dependency or build tool and propagates malicious code through
+the pipeline. Empirical data shows 78\% of vulnerability exposure in
+modern applications sits in transitive, not direct,
+dependencies~\cite{singh2020}. Controlled by SCA with provenance
 verification, digest pinning, and SBOM generation (Layer~3).
 
-\textbf{T2~-- Build Environment Compromise:} The build server holds
-pipeline trust and access to secrets and signing keys. Mitigated by
-hermetic, network-isolated, ephemeral build containers (Layer~2).
+\textbf{T2~-- Build Environment Compromise:} The build server carries
+pipeline trust and holds access to secrets and signing keys. Controlled
+by hermetic, network-isolated, ephemeral build containers (Layer~2).
 
-\textbf{T3~-- Credential and Secret Exposure:} Approximately one in
-six public repositories contains at least one exposed
-credential~\cite{singh2020}. Mitigated by automated secret scanning
+\textbf{T3~-- Credential and Secret Exposure:} Roughly one in six
+public repositories contains at least one exposed
+credential~\cite{singh2020}. Controlled by automated secret scanning
 and secrets-manager integration (Layer~1).
 
 \textbf{T4~-- Artifact Tampering:} Post-scan modification of a build
-artifact before deployment. Mitigated by cryptographic artifact signing
+artifact before deployment. Controlled by cryptographic artifact signing
 via Sigstore/Cosign enforced at admission time (Layer~4).
 
 \textbf{T5~-- IaC Misconfiguration:} Cloud misconfigurations account
-for 19\% of cloud security incidents~\cite{solanke2022}. Mitigated by
+for 19\% of cloud security incidents~\cite{solanke2022}. Controlled by
 Checkov/tfsec IaC scanning and OPA policy gates (Layers 2, 5).
 
 \textbf{T6~-- Insider Threat and Privilege Escalation:} Excessive
-pipeline permissions and weak branch protection. Mitigated by
-least-privilege service accounts, mandatory review, and immutable
-audit logs (Layers 1, 5).
+pipeline permissions and weak branch protection are the primary vectors.
+Controlled by least-privilege service accounts, mandatory review, and
+immutable audit logs (Layers 1, 5).
 
 % ============================================================
 \section{Unified DevSecOps Framework Methodology}
 % ============================================================
 
-The UDF is a five-layer architecture governed by \emph{progressive
-elaboration}: each layer delivers a functional security baseline in
-its minimal configuration, with additional controls unlocked as
-organisational maturity grows. Fig.~\ref{fig:pipeline} illustrates the
-linear CI/CD security flow.
+The UDF is a five-layer architecture built on \emph{progressive
+elaboration}: each layer delivers a working security baseline in its
+minimal configuration, and additional controls activate as organisational
+maturity grows. Fig.~\ref{fig:pipeline} shows the linear CI/CD security
+flow.
 
 % ---- TikZ Linear Pipeline Diagram ----
 \begin{figure}[t]
@@ -387,41 +379,39 @@ Layer~1 controls apply at the repository level before any automated
 build, addressing threats T3 and T6.
 
 \textbf{Branch protection and mandatory review.} Production-bound
-branches enforce a minimum of two approvals, required status-check
-passes, and prohibition of direct force-push, ensuring no unreviewed
-code enters the deployment stream.
+branches require a minimum of two approvals, passing required status
+checks, and prohibition of direct force-push, so no unreviewed code
+enters the deployment stream.
 
-\textbf{Signed commits.} Developer commits are GPG- or SSH-signed with
-signature verification enforced at branch-protection level, creating a
-cryptographic chain of identity directly satisfying NIST SP~800-204D
+\textbf{Signed commits.} Developer commits are GPG- or SSH-signed, with
+signature verification enforced at branch-protection level. This creates
+a cryptographic identity chain that directly satisfies NIST SP~800-204D
 provenance requirements~\cite{nist2024}.
 
-\textbf{Pre-commit secret scanning.} GitLeaks and TruffleHog execute
-as pre-commit hooks, intercepting secrets before they enter version
-history. Historical commits are retrospectively scanned.
+\textbf{Pre-commit secret scanning.} GitLeaks and TruffleHog run as
+pre-commit hooks, catching secrets before they enter version history.
+Historical commits are scanned retrospectively.
 
 \textbf{SBOM lineage initialisation.} Declared dependencies from
 manifest files (\texttt{package.json}, \texttt{requirements.txt},
 \texttt{go.mod}) are captured at source, establishing a versioned
-baseline that downstream SBOM generation attests.
+baseline that downstream SBOM generation then attests.
 
 \subsection{Layer~2 -- Build-Time Analysis}
 
 \textbf{SAST.} All UDF profiles enforce a hard-fail policy on Critical
-and High severity findings with available fixes; Medium findings
-produce non-blocking advisory annotations to preserve velocity.
+and High severity findings with available fixes. Medium findings produce
+non-blocking advisory annotations to preserve velocity.
 
 \textbf{IaC scanning.} Checkov and tfsec analyse Terraform,
-CloudFormation, and Kubernetes manifests for misconfigurations---
-publicly exposed storage, disabled encryption, overly permissive
-IAM---directly addressing T5. Findings surface as pull-request
-annotations before merge.
+CloudFormation, and Kubernetes manifests for misconfigurations---publicly
+exposed storage, disabled encryption, overly permissive IAM---addressing
+T5 directly. Findings surface as pull-request annotations before merge.
 
-\textbf{Hermetic build environment.} Build containers are constructed
-from digest-pinned base images, execute with network egress fully
-disabled, and are discarded after each build. This implements the
-hermetic build requirement of NIST SP~800-204D, preventing
-dependency confusion attacks~\cite{nist2024}.
+\textbf{Hermetic build environment.} Build containers use digest-pinned
+base images, run with network egress fully disabled, and are discarded
+after each build. This satisfies the hermetic build requirement of NIST
+SP~800-204D and blocks dependency confusion attacks~\cite{nist2024}.
 
 \textbf{Licence compliance.} Automated licence scanning flags
 incompatible licences as a blocking policy gate, preventing legal
@@ -430,66 +420,65 @@ exposure from unvetted third-party code.
 \subsection{Layer~3 -- Dependency Governance and SBOM}
 
 \textbf{Software Composition Analysis.} SCA tools scan the full
-dependency graph---direct and transitive---against NVD, GitHub
-Advisory Database, and OSV. Research indicates 78\% of vulnerability
-exposure resides in transitive dependencies~\cite{singh2020}, making
-transitive coverage a critical differentiator.
+dependency graph---direct and transitive---against NVD, GitHub Advisory
+Database, and OSV. Since 78\% of vulnerability exposure sits in
+transitive dependencies~\cite{singh2020}, transitive coverage is a
+critical differentiator, not a nice-to-have.
 
-\textbf{SBOM generation and attestation.} The complete dependency
-graph is serialised in CycloneDX or SPDX format, signed, and stored
-as a pipeline artifact. SBOM generation satisfies a mandatory NIST
-SP~800-204D control and the US Executive Order on Improving
-Cybersecurity and EU Cyber Resilience Act~\cite{nist2024}.
+\textbf{SBOM generation and attestation.} The complete dependency graph
+is serialised in CycloneDX or SPDX format, signed, and stored as a
+pipeline artifact. SBOM generation satisfies a mandatory NIST SP~800-204D
+control and aligns with the US Executive Order on Improving Cybersecurity
+and the EU Cyber Resilience Act~\cite{nist2024}.
 
-\textbf{Dependency pinning enforcement.} A policy gate verifies all
+\textbf{Dependency pinning enforcement.} A policy gate checks that all
 dependencies are pinned to cryptographic digests rather than semantic
-version constraints, preventing range-hijacking attacks.
+version constraints, closing the range-hijacking attack surface.
 
 \subsection{Layer~4 -- Runtime Hardening and DAST}
 
 \textbf{Container image scanning.} Images are scanned for known
-vulnerabilities in OS and application layers. A policy gate enforces
+vulnerabilities in OS and application layers. A policy gate enforces a
 maximum base-image age and blocks images with CVSS~$\geq$~9.0.
 
 \textbf{Artifact signing.} Container images are signed via
 Sigstore/Cosign with keyless signing backed by the Rekor transparency
-log. Signature verification is enforced at Kubernetes admission time
-by Kyverno or Gatekeeper, implementing NIST SP~800-204D control
+log. Signature verification runs at Kubernetes admission time through
+Kyverno or Gatekeeper, implementing NIST SP~800-204D control
 SA-12(14)~\cite{nist2024}.
 
-\textbf{DAST.} OWASP ZAP or Nuclei probe pre-production instances
-to discover authentication bypasses, session fixation, SSRF, and
-business logic flaws invisible to SAST.
+\textbf{DAST.} OWASP ZAP or Nuclei probe pre-production instances to
+uncover authentication bypasses, session fixation, SSRF, and business
+logic flaws that SAST cannot see.
 
 \textbf{In-toto attestation.} Cryptographically signed attestations
-record precise inputs, environment parameters, and tool versions,
-forming a verifiable supply-chain record satisfying SLSA Levels~2--4.
+record precise inputs, environment parameters, and tool versions, forming
+a verifiable supply-chain record that satisfies SLSA Levels~2--4.
 
 \subsection{Layer~5 -- Governance and Policy-as-Code}
 
-\textbf{Policy-as-Code (PaC).} OPA with Rego policies encodes
-security requirements as version-controlled, automatically enforced
-declarative rules~\cite{solanke2022,allam2022,thota2024}. Policy
-categories cover vulnerability gates, image provenance, IaC
-compliance, and audit completeness. Crucially, policy violations
-produce specific actionable error messages rather than opaque build
-failures---directly improving the developer experience that
-Cheenepalli et~al.\ identify as critical for SME
+\textbf{Policy-as-Code (PaC).} OPA with Rego policies encodes security
+requirements as version-controlled, automatically enforced declarative
+rules~\cite{solanke2022,allam2022,thota2024}. Policy categories cover
+vulnerability gates, image provenance, IaC compliance, and audit
+completeness. Critically, policy violations produce specific, actionable
+error messages rather than opaque build failures---improving the developer
+experience that Cheenepalli et~al.\ identify as essential for SME
 adoption~\cite{cheenepalli2025}.
 
 \textbf{Runtime monitoring.} Falco rules detect anomalous container
-behaviour---unexpected network connections, privilege escalation---
-forwarding alerts to the SIEM.
+behaviour---unexpected network connections, privilege escalation---and
+forward alerts to the SIEM.
 
-\textbf{Continuous compliance auditing.} For SOP-3, the compliance
-module aggregates in-toto attestations, SBOMs, audit logs, and policy
-records into structured evidence packages mapped to NIST SP~800-204D
-controls. Automated evidence collection reduces audit-preparation time
-by 60--70\%~\cite{solanke2022}.
+\textbf{Continuous compliance auditing.} At SOP-3, the compliance module
+aggregates in-toto attestations, SBOMs, audit logs, and policy records
+into structured evidence packages mapped to NIST SP~800-204D controls.
+Automated evidence collection cuts audit-preparation time by
+60--70\%~\cite{solanke2022}.
 
-\textbf{Immutable audit logs.} All pipeline outputs, policy
-evaluations, and security findings are forwarded to an append-only
-WORM-backed log, satisfying integrity and non-repudiation requirements.
+\textbf{Immutable audit logs.} All pipeline outputs, policy evaluations,
+and security findings are forwarded to an append-only WORM-backed log,
+satisfying integrity and non-repudiation requirements.
 
 \subsection{Security Operating Profiles}
 
@@ -509,11 +498,10 @@ integration, and quarterly SBOM publication.
 \section{Comparative Security Tool Analysis}
 % ============================================================
 
-Table~\ref{tab:tools} presents a comprehensive evaluation of 12 tools
-across five dimensions: detection coverage, false-positive rate (FPR),
-pipeline integration complexity, licensing model, and SOP suitability.
-Coverage and FPR data are drawn from empirical evaluations
-in~\cite{singh2020,thota2024}.
+Table~\ref{tab:tools} evaluates 12 tools across five dimensions:
+detection coverage, false-positive rate (FPR), pipeline integration
+complexity, licensing model, and SOP suitability. Coverage and FPR
+figures are drawn from empirical evaluations in~\cite{singh2020,thota2024}.
 
 \begin{table*}[t]
 \caption{Comparative Analysis of DevSecOps Security Tools
@@ -562,92 +550,89 @@ Checkov      & IaC  & 1000+ rules& 10\% & Low     & --             & Apache 2.0 
 
 \textbf{SOP tool selections.}
 \textit{SOP-1:} Semgrep~+~OWASP ZAP~+~Trivy~+~Checkov. All
-open-source; Trivy provides SCA and container scanning in a single
-binary, minimising operational overhead.
+open-source; Trivy handles SCA and container scanning in a single
+binary, keeping operational overhead low.
 \textit{SOP-2:} CodeQL~+~Nuclei~+~Snyk~+~Checkov. Balances coverage
 depth with managed-service convenience.
 \textit{SOP-3:} Checkmarx~+~Burp Suite Enterprise~+~Mend~+~Checkov.
-Maximum coverage with commercial support matching regulated-industry
+Maximum coverage with commercial support suited to regulated-industry
 evidence requirements~\cite{solanke2022}.
 
 % ============================================================
 \section{The AI/ML Frontier in DevSecOps}
 % ============================================================
 
-The integration of AI and ML into DevSecOps represents the most
-significant near-term operational evolution. Two problems are
-particularly amenable: the alert fatigue crisis and the remediation
-bottleneck created by a global deficit of security-skilled engineers.
+AI and ML are changing how DevSecOps pipelines handle two long-standing
+problems: alert fatigue and the remediation bottleneck that comes from
+a global shortage of security-skilled engineers.
 
 \subsection{The Alert Fatigue Crisis}
 
-Thota~\cite{thota2024} documents that in enterprise CI/CD
-environments, SAST false-positive rates average 35--40\% without
-expert calibration. When developers encounter high false-positive
-rates, trust erodes and alert dismissal becomes habitual---a
-normalisation dynamic where genuine vulnerabilities are dismissed
-alongside noise. The quantified impact is stark: teams at
-organisations with uncalibrated tooling acknowledge fewer than 28\%
-of critical alerts within 24~hours, compared to 71\% at organisations
-with active false-positive reduction programmes~\cite{thota2024}.
+In enterprise CI/CD environments, SAST false-positive rates average
+35--40\% without expert calibration~\cite{thota2024}. When developers
+see that many false alarms, trust erodes and alert dismissal becomes
+habitual---genuine vulnerabilities get waved through alongside noise.
+The numbers bear this out: at organisations with uncalibrated tooling,
+fewer than 28\% of critical alerts are acknowledged within 24~hours,
+versus 71\% at organisations with active false-positive reduction
+programmes~\cite{thota2024}.
 
 ML classifiers trained on historical alert dispositions (dismissed
-vs.\ confirmed) predict the probability that a new alert represents a
-genuine vulnerability, filtering high-confidence false positives before
-they reach developer queues. Feature vectors include code context (file
-type, module sensitivity, call-graph depth), CWE category, historical
-FPR for that rule in the codebase, and developer dismiss rate for
-analogous alerts. Risk-based prioritisation weights alerts by empirical
-exploitability using ExploitDB and the CISA Known Exploited
-Vulnerabilities (KEV) catalogue rather than CVSS alone. The UDF
-Security Intelligence Orchestrator (SIO) implements this
-prioritisation pipeline, initialised from four to six weeks of
-human-curated dispositions and refined through active
-learning~\cite{singh2020}.
+vs.\ confirmed) score each incoming alert for false-positive
+probability, filtering high-confidence noise before it reaches developer
+queues. Feature vectors include code context (file type, module
+sensitivity, call-graph depth), CWE category, historical FPR for that
+rule in the codebase, and developer dismiss rates for analogous alerts.
+Risk-based prioritisation weights each alert by empirical exploitability
+using ExploitDB and the CISA Known Exploited Vulnerabilities (KEV)
+catalogue rather than CVSS alone. The UDF Security Intelligence
+Orchestrator (SIO) implements this prioritisation pipeline, seeded from
+four to six weeks of human-curated dispositions and then refined through
+active learning~\cite{singh2020}.
 
 \subsection{LLM-Assisted Autonomous Remediation}
 
 With approximately 3.5~million unfilled cybersecurity positions
-globally, the deficit of developers with both security expertise and
-application domain knowledge is structural~\cite{thota2024}. LLMs
-present a novel solution: given a SAST finding (vulnerable code
-snippet, CWE category, surrounding context), an LLM generates a
-corrected code snippet. Empirical evaluations suggest LLM-generated
-fixes for common vulnerability classes (SQL injection, XSS, insecure
-deserialisation) are semantically valid in approximately 60--75\% of
-cases without human review, and over 90\% with a lightweight
-verification step~\cite{thota2024}.
+globally, the shortage of developers who combine security expertise
+with application domain knowledge is structural~\cite{thota2024}. LLMs
+offer a practical route forward: given a SAST finding---vulnerable code
+snippet, CWE category, surrounding context---an LLM produces a corrected
+snippet. Empirical evaluations show LLM-generated fixes for common
+vulnerability classes (SQL injection, XSS, insecure deserialisation)
+are semantically valid in approximately 60--75\% of cases without human
+review, and in over 90\% of cases with a lightweight verification
+step~\cite{thota2024}.
 
-Beyond fix generation, LLMs contribute three further pipeline
-functions: \textit{vulnerability explanation}---bridging the gap
+Beyond fix generation, LLMs contribute three pipeline functions worth
+distinguishing. \textit{Vulnerability explanation} bridges the gap
 between cryptic scanner output and actionable developer understanding,
-directly addressing the expertise barrier identified by
-Cheenepalli~et~al.~\cite{cheenepalli2025}; \textit{dependency upgrade
-assistance}---assessing API compatibility and drafting upgrade PRs for
-SCA findings; and \textit{policy generation}---translating
-natural-language security requirements into OPA/Rego, lowering the
-policy-as-code adoption barrier for SMEs.
+which directly addresses the expertise barrier Cheenepalli et~al.\
+identify~\cite{cheenepalli2025}. \textit{Dependency upgrade assistance}
+assesses API compatibility and drafts upgrade PRs for SCA findings.
+\textit{Policy generation} translates natural-language security
+requirements into OPA/Rego, lowering the policy-as-code adoption
+barrier for teams without Rego expertise.
 
 \subsection{The Security Intelligence Orchestrator (SIO)}
 
 The SIO is the UDF's AI/ML component, operating across all pipeline
-stages with a five-step sequence: (1)~\textit{Finding ingestion and
-deduplication}: outputs from all scanners are ingested, deduplicated
-against the vulnerability backlog, and enriched with codebase context.
+stages in five steps. (1)~\textit{Finding ingestion and deduplication}:
+outputs from all scanners are ingested, deduplicated against the
+vulnerability backlog, and enriched with codebase context.
 (2)~\textit{ML triage}: the classifier scores each finding for
 false-positive probability; high-confidence false positives are
-suppressed. (3)~\textit{LLM remediation generation}: for findings
-above a configurable severity threshold, the SIO generates a
-remediation pull request with proposed fix, natural-language
-explanation, and confidence assessment. (4)~\textit{Human-in-the-loop
-gate}: generated PRs require human approval before merge---a safety
-requirement, not merely an efficiency feature. (5)~\textit{Audit
-trail}: all SIO actions are recorded in the immutable audit log.
+suppressed. (3)~\textit{LLM remediation generation}: for findings above
+a configurable severity threshold, the SIO generates a remediation pull
+request with a proposed fix, natural-language explanation, and confidence
+assessment. (4)~\textit{Human-in-the-loop gate}: generated PRs require
+human approval before merge---a safety requirement, not an efficiency
+feature. (5)~\textit{Audit trail}: all SIO actions are recorded in the
+immutable audit log.
 
-LLM-generated fixes may introduce new vulnerabilities in
-security-sensitive code paths. We therefore recommend against
-fully autonomous, human-free LLM deployment for cryptographic
-implementations or authentication logic in current-generation systems.
+LLM-generated fixes can introduce new vulnerabilities in
+security-sensitive code paths. Fully autonomous, human-free LLM
+deployment for cryptographic implementations or authentication logic is
+not recommended in current-generation systems.
 
 % ============================================================
 \section{Real-World Implementation: Fintech Case Study}
@@ -656,50 +641,49 @@ implementations or authentication logic in current-generation systems.
 \subsection{Organisational Context}
 
 FinCore~Ltd.\ (pseudonymised) is a growth-stage payment-processing
-platform under PCI-DSS Level~1 obligations. At study commencement:
-47~engineers; 12--15 daily production deployments across a
-Kubernetes microservices architecture; no formal security pipeline.
-Security reviews were performed manually by a single part-time
-engineer, resulting in 312 open findings (43 Critical) and a Critical
-MTTR of 34~days---far exceeding the PCI-DSS requirement of one day
-for internet-facing systems.
+platform operating under PCI-DSS Level~1 obligations. At study
+commencement: 47~engineers; 12--15 daily production deployments across
+a Kubernetes microservices architecture; no formal security pipeline.
+Security reviews were performed manually by a single part-time engineer,
+leaving 312 open findings (43 Critical) and a Critical MTTR of 34~days
+---well outside the PCI-DSS requirement of one day for internet-facing
+systems.
 
 \subsection{SOP-2 UDF Deployment}
 
-FinCore was classified SOP-2 (Growth), warranting all five layers
-with open-source and managed services across four two-week sprints.
+FinCore was classified SOP-2 (Growth), calling for all five layers with
+open-source and managed services across four two-week sprints.
 
 \begin{description}[font=\bfseries, leftmargin=*, style=nextline]
   \item[Sprint~1 -- Layers~1 and~3.]
-  Snyk integrated into all 14 microservice repositories. Within 72~hours,
-  287 vulnerable dependencies identified including 31 Critical CVEs in
-  transitive paths; one-click fix PRs cleared the backlog in one week.
-  GitLeaks retroactive scanning surfaced three committed AWS key pairs
-  (from 2022), all rotated within 24~hours.
+  Snyk was integrated into all 14 microservice repositories. Within
+  72~hours, 287 vulnerable dependencies were identified, including 31
+  Critical CVEs in transitive paths; one-click fix PRs cleared the
+  backlog in one week. A GitLeaks retrospective scan surfaced three
+  committed AWS key pairs dating from 2022, all rotated within 24~hours.
 
   \item[Sprint~2 -- Layer~2.]
-  Semgrep (\texttt{returntocorp/semgrep-action}) added to all CI
+  Semgrep (\texttt{returntocorp/semgrep-action}) was added to all CI
   workflows with \texttt{p/security-audit} plus three custom rules
-  targeting FinCore's payment SDK. Checkov flagged two publicly
-  accessible S3 buckets in the staging Terraform plan. Build runners
-  migrated to ephemeral, network-isolated containers (egress restricted
-  to GitHub Packages, PyPI, and npm).
+  targeting FinCore's payment SDK. Checkov caught two publicly accessible
+  S3 buckets in the staging Terraform plan. Build runners were migrated
+  to ephemeral, network-isolated containers (egress restricted to GitHub
+  Packages, PyPI, and npm).
 
   \item[Sprint~3 -- Layer~4.]
-  Trivy (\texttt{aquasecurity/trivy-action}) exposed 14~Critical CVEs in
-  a PostgreSQL client image pinned 18~months out of date. Policy gate
-  now fails builds with base images older than 30~days. Cosign keyless
-  signing (Rekor transparency log) enabled; Kyverno admission controller
+  Trivy (\texttt{aquasecurity/trivy-action}) found 14~Critical CVEs in a
+  PostgreSQL client image pinned 18~months out of date. Policy gates now
+  fail builds with base images older than 30~days. Cosign keyless signing
+  (Rekor transparency log) was enabled; a Kyverno admission controller
   enforces that only verified images run in any cluster. OWASP ZAP
-  nightly baseline scanning against staging activated.
+  nightly baseline scanning against staging was activated.
 
   \item[Sprint~4 -- Layer~5.]
-  OPA/Gatekeeper deployed with seven Rego policies covering privilege
-  escalation, resource limits, host-network prohibition, SBOM
-  attestation, and Cosign verification. The SIO, seeded with 90~days of
-  retrospective Snyk/Semgrep dispositions, reduced incoming finding
-  volume by 31\% in its first week. Quarterly PCI-DSS~6.3.2 SBOM
-  reporting automated.
+  OPA/Gatekeeper was deployed with seven Rego policies covering privilege
+  escalation, resource limits, host-network prohibition, SBOM attestation,
+  and Cosign verification. The SIO, seeded with 90~days of retrospective
+  Snyk/Semgrep dispositions, cut incoming finding volume by 31\% in its
+  first week. Quarterly PCI-DSS~6.3.2 SBOM reporting was automated.
 \end{description}
 
 \textbf{Configuration snippets (GitHub Actions):}
@@ -727,13 +711,12 @@ with open-source and managed services across four two-week sprints.
 
 Table~\ref{tab:outcomes} summarises FinCore's security metrics four
 months after SOP-2 deployment. The MTTR reduction from 34 to 3.2~days
-brought FinCore comfortably within PCI-DSS Requirement~6.4.3 bounds.
-Deployment frequency increased marginally despite five new security
-gates, confirming that well-calibrated UDF gates do not constitute a
-velocity impediment at SOP-2 configuration. The reduction in audit
-preparation time from 120 to 38~hours represents a material
-operational saving, consistent with the 60--70\% reduction documented
-for comparable implementations~\cite{solanke2022}.
+brought FinCore within PCI-DSS Requirement~6.4.3 bounds. Deployment
+frequency held steady despite five new security gates, confirming that
+well-calibrated UDF gates do not constitute a velocity impediment at
+SOP-2 configuration. The reduction in audit preparation time from 120
+to 38~hours is consistent with the 60--70\% reduction documented for
+comparable implementations~\cite{solanke2022}.
 
 \begin{table}[h]
 \caption{FinCore Measured Outcomes: Pre vs.\ Post UDF (SOP-2)}
@@ -758,62 +741,59 @@ Deployment frequency      & 13/day & 14/day \\
 
 \subsection{Lessons Learned and Organisational Impact}
 
-Three key lessons emerged from the FinCore deployment.
-\textit{First}, developer adoption was accelerated by Snyk's
-one-click fix PRs, which reduced friction and demonstrated
-immediate security value---consistent with the TAM finding of
-Cheenepalli et~al.~\cite{cheenepalli2025} that perceived usefulness
-drives adoption more strongly than technical capability alone.
-\textit{Second}, the ML classifier's false-positive reduction was
-critical for sustaining developer trust; the FinCore engineering
-lead observed that \emph{without it, alert fatigue would have
-undermined the programme within the first month}. This underscores
-Thota's~\cite{thota2024} finding that uncalibrated tooling erodes
-trust irreversibly. \textit{Third}, automated SBOM generation
-transformed audit preparation from a quarterly fire drill into a
-routine, low-effort activity. The security engineer, previously
-spending 60\% of time on manual reviews, shifted focus to policy
-refinement and threat modelling---precisely the high-leverage work
-that human security expertise uniquely enables.
+Three lessons emerged from the FinCore deployment. Developer adoption
+accelerated because Snyk's one-click fix PRs reduced friction and showed
+immediate value---consistent with the TAM finding of Cheenepalli
+et~al.~\cite{cheenepalli2025} that perceived usefulness drives adoption
+more reliably than technical capability alone. The ML classifier's
+false-positive reduction was what kept developer trust intact; the
+FinCore engineering lead noted that \emph{without it, alert fatigue
+would have undermined the programme within the first month}---confirming
+Thota's~\cite{thota2024} finding that uncalibrated tooling erodes trust
+irreversibly. Automated SBOM generation turned quarterly audit
+preparation from a fire drill into a low-effort routine. The security
+engineer, previously spending 60\% of time on manual reviews, could
+shift focus to policy refinement and threat modelling---the work that
+security expertise is actually for.
 
 % ============================================================
 \section{Evaluation}
 % ============================================================
 
-A structured assessment was conducted across three isolated cloud
-environments, one per SOP, against a common target: a multi-tier
-Node.js/Python/PostgreSQL application on Kubernetes. Forty-five
-synthetic vulnerabilities spanning OWASP Top~10 were introduced.
+A structured assessment was run across three isolated cloud environments,
+one per SOP, against a common target: a multi-tier Node.js/Python/PostgreSQL
+application on Kubernetes. Forty-five synthetic vulnerabilities spanning
+OWASP Top~10 were introduced.
 
 \textbf{Baseline.} Ad-hoc security practices detected 24\% of the 45
 vulnerabilities before production.
 
 \textbf{Detection performance.} SOP-1 detected 82\% pre-production
-(MTTR: 4.2~days). SOP-2 detected 91\% (MTTR: 2.8~days). SOP-3
-detected 96\% (MTTR: 1.9~days). Even the minimal SOP-1 configuration
-represents a $3.4\times$ improvement over the 24\% baseline.
+(MTTR: 4.2~days). SOP-2 detected 91\% (MTTR: 2.8~days). SOP-3 detected
+96\% (MTTR: 1.9~days). The minimal SOP-1 configuration alone is a
+$3.4\times$ improvement on the 24\% baseline.
 
 \textbf{Alert fatigue reduction.} With ML false-positive filtering
-enabled (SOP-2 and SOP-3), FPR in developer-facing queues decreased
-from 34\% to 11\%. Developer alert acknowledgement within 24~hours
-increased from 31\% to 68\%, consistent with Thota~\cite{thota2024}.
+active (SOP-2 and SOP-3), FPR in developer-facing queues dropped from
+34\% to 11\%. Developer alert acknowledgement within 24~hours increased
+from 31\% to 68\%, consistent with Thota~\cite{thota2024}.
 
 \textbf{Compliance coverage.} SOP-3 achieved mapped coverage of 87\%
 of applicable NIST SP~800-204D controls~\cite{nist2024}; the remaining
-13\% require manual governance and vendor management processes.
+13\% require manual governance and vendor management processes outside
+the automated pipeline.
 
 \textbf{Pipeline velocity impact.} Mean pipeline duration increased
-14\% for SOP-2 and 22\% for SOP-3---within the 12--18\% overhead
-range reported by Singh~\cite{singh2020} and within the FinCore
-deployment frequency tolerances.
+14\% for SOP-2 and 22\% for SOP-3---within the 12--18\% overhead range
+reported by Singh~\cite{singh2020} and within the FinCore deployment
+frequency tolerances.
 
-\textbf{Residual limitations.} The framework does not eliminate the
-need for manual penetration testing; automated tools cannot reliably
-detect complex business logic vulnerabilities, authentication bypass
-in stateful workflows, or novel zero-day exploits~\cite{jammeh2020,thota2024}.
-The framework's effectiveness remains contingent on security expertise
-for tool configuration and policy authoring---a failure mode documented
-across the surveyed literature.
+\textbf{Residual limitations.} Automated tools cannot reliably detect
+complex business logic vulnerabilities, authentication bypass in stateful
+workflows, or novel zero-day exploits~\cite{jammeh2020,thota2024}. Manual
+penetration testing remains necessary. The framework's effectiveness also
+depends on security expertise for tool configuration and policy authoring,
+a failure mode documented across the surveyed literature.
 
 % ============================================================
 \section{Discussion and Conclusion}
@@ -821,83 +801,79 @@ across the surveyed literature.
 
 \subsection{Discussion}
 
-Our evaluation confirms Cheenepalli et~al.'s~\cite{cheenepalli2025}
-finding that expertise availability is a primary determinant of
-DevSecOps success. The SOP-1 configuration deliberately minimises
-expertise requirements through open-source tooling, LLM-generated
-finding explanations, and opinionated defaults. The persistent gap
-between SOP-1 and SOP-3 performance (82\% vs.\ 96\%) nonetheless
-reflects the irreducible value of deep security expertise in tuning
-and operating comprehensive programmes.
+The evaluation confirms Cheenepalli et~al.'s~\cite{cheenepalli2025}
+finding that expertise availability is the primary determinant of
+DevSecOps success. SOP-1 minimises expertise requirements through
+open-source tooling, LLM-generated finding explanations, and opinionated
+defaults. The gap between SOP-1 and SOP-3 performance (82\% vs.\ 96\%)
+still holds, which reflects the irreducible value of deep security
+expertise in tuning and operating a full programme---there is no way to
+automate that entirely away.
 
-NIST SP~800-204D~\cite{nist2024} represents a maturation of industry
-thinking: the supply chain is not merely a risk to manage alongside
-other concerns but a foundational trust infrastructure requiring
-explicit engineering. The UDF's integration of SBOM generation,
-artifact signing, and in-toto provenance attestation operationalises
-this perspective. Organisations without these controls operate with a
-significant blind spot given the sophistication of documented
-supply-chain attacks~\cite{solanke2022}.
+NIST SP~800-204D~\cite{nist2024} reflects how the field now treats supply
+chains: not as one risk category among many, but as foundational trust
+infrastructure requiring explicit engineering attention. The UDF's
+integration of SBOM generation, artifact signing, and in-toto provenance
+attestation puts that perspective into operational practice. Organisations
+without these controls carry a significant blind spot given the
+sophistication of documented supply-chain attacks~\cite{solanke2022}.
 
 \subsection{Future Research Directions}
 
 \subsubsection{Quantum-Resistant Artifact Signing}
 
 Current CI/CD artifact signing relies on ECDSA with the P-256 curve.
-The advent of cryptographically relevant quantum computers threatens
-these signatures via Shor's algorithm. NIST has standardised three
+Cryptographically relevant quantum computers would threaten these
+signatures via Shor's algorithm. NIST has standardised three
 post-quantum digital signature algorithms: ML-DSA (CRYSTALS-Dilithium),
 SLH-DSA (SPHINCS$^+$), and FN-DSA (FALCON). Integrating these into
-CI/CD pipelines presents non-trivial challenges: ML-DSA signature
-sizes are approximately 2.5~KB versus ECDSA's 70--80 bytes, impacting
-storage and transmission overhead for frequently signed artifacts.
-A hybrid approach---signing with both classical ECDSA and
-quantum-resistant algorithms during a transition period---offers
-backward compatibility while providing quantum safety. Prototyping
-with Sigstore's Cosign shows a 15--20\% increase in signing latency
-and 30\% increase in storage requirements.
+CI/CD pipelines is non-trivial: ML-DSA signature sizes are approximately
+2.5~KB versus ECDSA's 70--80 bytes, which affects storage and
+transmission overhead for frequently signed artifacts. A hybrid
+approach---signing with both classical ECDSA and a quantum-resistant
+algorithm during a transition period---preserves backward compatibility
+while providing quantum safety. Prototyping with Sigstore's Cosign
+showed a 15--20\% increase in signing latency and a 30\% increase in
+storage requirements.
 
 \subsubsection{Federated ML for Alert Triage}
 
-The SIO classifier improves with labelled data, yet individual
-organisations possess limited datasets, and sharing raw findings
-violates confidentiality constraints. Federated learning (FL) provides
-a privacy-preserving solution: multiple organisations collaboratively
-train a shared triage model without exchanging raw alert data.
-Each participant trains locally and shares only model updates
+The SIO classifier improves with labelled data, but individual
+organisations have limited datasets, and sharing raw findings raises
+confidentiality concerns. Federated learning (FL) lets multiple
+organisations train a shared triage model without exchanging raw alert
+data. Each participant trains locally and shares only model updates
 (gradients) with a central aggregator; differential privacy mechanisms
-add calibrated noise to protect against membership inference.
-Simulations using 1.2~million SAST/SCA findings from three partner
-organisations show an FL-trained classifier achieves false-positive
-reduction within 5\% of a centrally-trained model. Key challenges
-include handling non-IID data distributions across organisations and
-securing the aggregation server against poisoning attacks.
+add calibrated noise to protect against membership inference. Simulations
+using 1.2~million SAST/SCA findings from three partner organisations
+show an FL-trained classifier within 5\% of a centrally-trained model
+on false-positive reduction. Key open problems include non-IID data
+distributions across organisations and securing the aggregation server
+against poisoning attacks.
 
 \subsection{Conclusion}
 
-This paper has presented the Unified DevSecOps Framework, a five-layer,
-scale-adaptive architecture securing CI/CD pipelines across the
-organisational spectrum from resource-constrained SMEs to
-compliance-intensive enterprises. The UDF operationalises NIST
-SP~800-204D supply-chain integrity controls within a practically
-deployable system differentiated by Security Operating Profiles. The
-FinCore case study demonstrates a 90.6\% Critical MTTR reduction (34
-to 3.2~days) and 68\% uplift in timely alert acknowledgement.
-Evaluation across three SOP profiles shows pre-production
-vulnerability detection rising from a 24\% baseline to 96\% at
-enterprise configuration.
+This paper presented the Unified DevSecOps Framework, a five-layer,
+scale-adaptive architecture for securing CI/CD pipelines across the full
+organisational spectrum---from resource-constrained SMEs at PUCIT-scale
+to compliance-intensive enterprises. The UDF puts NIST SP~800-204D
+supply-chain integrity controls into a practically deployable system,
+differentiated by Security Operating Profiles. The FinCore case study
+records a 90.6\% Critical MTTR reduction (34 to 3.2~days) and a 68\%
+uplift in timely alert acknowledgement. Across three SOP configurations,
+pre-production vulnerability detection rises from a 24\% baseline to
+96\%.
 
-Future directions include: (1)~LLM fix accuracy benchmarking across
-vulnerability classes; (2)~Federated ML for alert triage;
-(3)~Quantum-resistant artifact signing aligned with NIST PQC standards;
-(4)~SME longitudinal study tracking long-term security posture
-evolution; and (5)~Integration with emerging supply-chain frameworks
-as SLSA and in-toto attestations evolve.
+Open directions include: (1)~LLM fix accuracy benchmarking across
+vulnerability classes; (2)~federated ML for alert triage;
+(3)~quantum-resistant artifact signing aligned with NIST PQC standards;
+(4)~longitudinal study of SME security posture evolution; and
+(5)~integration with evolving SLSA and in-toto attestation frameworks.
 
-DevSecOps represents the operational realisation of security-by-design
-at the level of software delivery infrastructure. The UDF advances
-its implementation maturity and points toward an intelligent, largely
-self-managing pipeline security future.
+DevSecOps puts security-by-design into practice at the delivery
+infrastructure level. The UDF moves that practice forward---and the
+direction it points, toward intelligent, increasingly self-managing
+pipelines, is where the field is heading.
 
 % ============================================================
 \balance
